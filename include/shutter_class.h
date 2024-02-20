@@ -60,4 +60,6 @@ class Shutter {
     void Update_position();
 };
 
+extern Shutter r1;
+
 #endif

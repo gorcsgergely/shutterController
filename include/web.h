@@ -1,18 +1,43 @@
-#ifdef _WEB_
 #ifndef WEB_H
 #define WEB_H
 
 #include <WebServer.h>
-//#include <ESP8266WebServerSecure.h>
 #include <HTTPUpdateServer.h>
 
-void readMain();
-void readConfig();
-void updateField();
-void pressButton();
-void handleRootPath();
-void handleConfigurePath();
-void handleUpgradePath();
+class WebPage{
+  public:
+    WebPage(WebServer *server);
+    void readMain();
+    void readConfig();
+    void updateField();
+    void pressButton();
+    void handleRootPath();
+    void handleConfigurePath();
+    void handleUpgradePath();
+   // void updateConfig();
+    void setup();
+    void readMain();
+
+  public:
+    unsigned long lastUpdate = 0; // timestamp - last MQTT update
+    unsigned long lastCallback = 0; // timestamp - last MQTT callback received
+    unsigned long lastWiFiDisconnect=0;
+    unsigned long lastWiFiConnect=0;
+    unsigned long lastMQTTDisconnect=0; // last time MQTT was disconnected
+    unsigned long WiFiLEDOn=0;
+    unsigned long k1_up_pushed=0;
+    unsigned long k1_down_pushed=0;
+
+    String lastCommand = "";
+    String crcStatus="";
+
+  private:
+    void Restart();
+    int WifiGetRssiAsQuality(int rssi);
+    void timeDiff(char *buf,size_t len,unsigned long lastUpdate);
+  private:
+    WebServer* _server;
+};
 
 
 /***************/
@@ -642,5 +667,4 @@ function readConfig() {
 </html>
 )#";
 
-#endif
 #endif
