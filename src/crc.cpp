@@ -13,6 +13,28 @@ struct shutter_position {
     int r1_tilt;
 } p;
 
+/**** Calculation of CRC of stored values ****/ 
+
+unsigned long eeprom_crc(int o,int s) {
+  const unsigned long crc_table[16] = {
+    0x00000000, 0x1db71064, 0x3b6e20c8, 0x26d930ac,
+    0x76dc4190, 0x6b6b51f4, 0x4db26158, 0x5005713c,
+    0xedb88320, 0xf00f9344, 0xd6d6a3e8, 0xcb61b38c,
+    0x9b64c2b0, 0x86d3d2d4, 0xa00ae278, 0xbdbdf21c
+  };
+
+  unsigned long crc = ~0L;
+  byte value;
+
+  for (int index = 0 ; index < s  ; ++index) {
+    value = EEPROM.read(o+index);
+    crc = crc_table[(crc ^ value) & 0x0f] ^ (crc >> 4);
+    crc = crc_table[(crc ^ (value >> 4)) & 0x0f] ^ (crc >> 4);
+    crc = ~crc;
+  }
+  return crc;
+}
+
 void openMemory() {
     EEPROM.begin(sizeof(configuration)+sizeof(unsigned long)+sizeof(shutter_position)+sizeof(unsigned long));
 }
@@ -25,7 +47,7 @@ void saveConfig() {
   EEPROM.commit();  
 }
 
-void loadConfig() {
+boolean loadConfig() {
   unsigned long check1;
   unsigned long check2;
   
@@ -41,9 +63,11 @@ void loadConfig() {
   if (check1!=check2) {  
     defaultConfig(&cfg);
     saveConfig();
-    crcStatus+="CRC config failed. ";
+    //crcStatus+="CRC config failed. ";
+    return false;
   } else {
-    crcStatus+="CRC config OK! ";
+    //crcStatus+="CRC config OK! ";
+    return true;
   }
 }
 
@@ -160,26 +184,4 @@ void loadStatus() {
 //    r1.Calibrate();   Ideally, I woudl need to calibrate here. But what if it restarts at night? Disable for now!
 //    r2.Calibrate();
   }
-}
-
-/**** Calculation of CRC of stored values ****/ 
-
-unsigned long eeprom_crc(int o,int s) {
-  const unsigned long crc_table[16] = {
-    0x00000000, 0x1db71064, 0x3b6e20c8, 0x26d930ac,
-    0x76dc4190, 0x6b6b51f4, 0x4db26158, 0x5005713c,
-    0xedb88320, 0xf00f9344, 0xd6d6a3e8, 0xcb61b38c,
-    0x9b64c2b0, 0x86d3d2d4, 0xa00ae278, 0xbdbdf21c
-  };
-
-  unsigned long crc = ~0L;
-  byte value;
-
-  for (int index = 0 ; index < s  ; ++index) {
-    value = EEPROM.read(o+index);
-    crc = crc_table[(crc ^ value) & 0x0f] ^ (crc >> 4);
-    crc = crc_table[(crc ^ (value >> 4)) & 0x0f] ^ (crc >> 4);
-    crc = ~crc;
-  }
-  return crc;
 }

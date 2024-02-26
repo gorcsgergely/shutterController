@@ -85,11 +85,11 @@ void WebPage::readMain() {
   root["device"]=String(cfg.host_name);
   root["tilting"]=cfg.tilt?"true":"false";
   root["wifi"]=String(WiFi.SSID());  
-  if (r1.semafor) {
+  /*if (r1.semafor) {
     root["mqtt"]= mqttResults[mqttClient.state()+4]+"(S1)";
   } else {
     root["mqtt"]= mqttResults[mqttClient.state()+4];
-  }
+  }*/
   timeDiff(buf1,25,lastWiFiDisconnect);
   timeDiff(buf2,25,lastMQTTDisconnect);
   root["disconnect"]=((lastWiFiDisconnect==0)?"N/A":(String(buf1)+" ago"))+","+((lastMQTTDisconnect==0)?"N/A":(String(buf2)+" ago"));

@@ -77,10 +77,9 @@ void callback(char* topic, byte* payload, unsigned int length);
 WiFiClient espClient;         // WiFi
 //ESP8266WiFiMulti wifiMulti;   // Primary and secondary WiFi
 
-// Here I have to initialize mqtt_server after setup
-
 PubSubClient mqttClient(espClient);   // MQTT client
 //PubSubClient mqttClient(_mqtt_server_,1883,callback,espClient);   // MQTT client
+
 httpServer httpserver;
 WebPage webpage=WebPage(httpserver.getServer());
 HTTPUpdateServer httpUpdater;
@@ -166,7 +165,14 @@ void setup() {
 
 // Open EEPROM
   openMemory();
-  loadConfig();   // loading config to cfg
+// Open EEPROM
+  openMemory();
+  if (loadConfig()){
+    webpage.crcStatus+="CRC config OK! ";
+  }
+  else{
+    webpage.crcStatus+="CRC config failed. ";
+  };  
   copyConfig(&cfg,&web_cfg); // copy config to web_cfg as well
   loadStatus();
 

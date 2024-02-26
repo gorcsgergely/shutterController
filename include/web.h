@@ -16,7 +16,6 @@ class WebPage{
     void handleUpgradePath();
    // void updateConfig();
     void setup();
-    void readMain();
 
   public:
     unsigned long lastUpdate = 0; // timestamp - last MQTT update
