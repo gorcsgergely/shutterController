@@ -64,6 +64,7 @@ unsigned long k1_down_pushed=0;
 
 unsigned long previousWifiAttempt = 0;
 unsigned long previousMQTTAttempt = 0;
+boolean wifiConnected=false;
 
 //String lastCommand = "";
 //String crcStatus="";
@@ -136,11 +137,8 @@ void setup_wifi() {
   digitalWrite(SLED, LOW);   // Turn the Status Led on
   MDNS.begin(cfg.host_name);
 
-//for web firmware upload
-#ifdef _WEB_
   MDNS.addService("http", "tcp", 80);
   Serial.printf("HTTPUpdateServer ready! Open http://%s.local/update in your browser\n", _host_name_);
-#endif
 
   #ifdef DEBUG
     Serial.println("");
@@ -425,9 +423,6 @@ void publishSensor() {
   }
 }
 
-
-
-
 /***********************************************************************************************
 LOOP - CHECK SENSOR AND SEND MQTT UPDATE
 ************************************************************************************************/
@@ -522,6 +517,12 @@ void loop() {
   checkSensors();
   if (WiFi.status() == WL_CONNECTED) {
     digitalWrite(SLED, LOW);   // Turn the Status Led on
+    if (!wifiConnected) //just (re)connected
+    {
+      wifiConnected=true;
+      MDNS.begin(cfg.host_name);
+      MDNS.addService("http", "tcp", 80);
+    }
     //lastWiFiConnect=now;  // Not used at the moment
     ArduinoOTA.handle(); // OTA first
     if (mqttClient.loop()) {
@@ -534,9 +535,14 @@ void loop() {
         previousMQTTAttempt = now;    
       }
     }   
-      httpserver.handleClient();         // Web handling
+    httpserver.handleClient();         // Web handling
      // MDNS.update(); //for web firmware upload
-  } else 
+  } else{ 
+    if(wifiConnected) //just disconnected
+    {
+      wifiConnected=false;
+      MDNS.end();
+    }
     if ((WiFi.status() != WL_CONNECTED) && ((unsigned long)(now - previousWifiAttempt) > WIFI_RETRY_INTERVAL)) {//every 30 sec
       digitalWrite(SLED, HIGH);   // Turn the Status Led off
       WiFi.disconnect();
@@ -544,5 +550,6 @@ void loop() {
       WiFi.begin(cfg.wifi_ssid1, cfg.wifi_password1);
       previousWifiAttempt = now;
     } 
+  }
   //delay(update_interval_loop); // 25 ms (short because of tilt) (1.5 degrees in 25 ms)
 }

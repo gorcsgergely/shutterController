@@ -268,7 +268,7 @@ void WebPage::updateConfig() {
 
   _server->send(200, "application/json", "{}");
 
- // copyConfig(&web_cfg,&cfg);
- // saveConfig();    
- // Restart();
+  copyConfig(&web_cfg,&cfg);
+  saveConfig();    
+  Restart();
 }
