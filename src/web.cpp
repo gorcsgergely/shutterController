@@ -54,7 +54,7 @@ void WebPage::setup(){
   _server->on("/readConfig",std::bind(&WebPage::readConfig, this));
   _server->on("/pressButton",std::bind(&WebPage::pressButton, this));
   _server->on("/updateField",std::bind(&WebPage::updateField, this));
- // _server->on("/updateConfig", HTTP_POST, std::bind(&WebPage::updateConfig, this));
+  _server->on("/updateConfig", HTTP_POST, std::bind(&WebPage::updateConfig, this));
 }
 
 
@@ -210,9 +210,9 @@ void WebPage::readConfig() {
   root["subscribe_calibrate"] = web_cfg.subscribe_calibrate;
   root["subscribe_reboot"] = web_cfg.subscribe_reboot;
   root["subscribe_reset"] = web_cfg.subscribe_reset;*/
-  root["Shutter1_duration_down"] = web_cfg.Shutter1_duration_down;
-  root["Shutter1_duration_up"] = web_cfg.Shutter1_duration_up;
-  root["Shutter1_duration_tilt"] = web_cfg.Shutter1_duration_tilt;
+  root["shutter_duration_down"] = web_cfg.Shutter1_duration_down;
+  root["shutter_duration_up"] = web_cfg.Shutter1_duration_up;
+  root["shutter_duration_tilt"] = web_cfg.Shutter1_duration_tilt;
   
   String out;
   serializeJson(root,out);
@@ -224,4 +224,51 @@ void WebPage::readConfig() {
 
 void  WebPage::Restart() { 
     ESP.restart(); 
+}
+
+void WebPage::updateConfig() {
+
+  JsonDocument doc;
+
+  if (_server->hasArg("plain") == false) {
+    return;
+  }
+  String body = _server->arg("plain");
+
+  DeserializationError error = deserializeJson(doc, body);
+
+  if (error) {
+ // Serial.print("deserializeJson() failed: ");
+ // Serial.println(error.c_str());
+    return;
+  }
+  
+  String hname = doc["host_name"];
+  strncpy(web_cfg.host_name,hname.c_str(),24);
+  String tilt = doc["tilt"];
+  web_cfg.tilt = tilt.equals("true");
+  String ahold = doc["auto_hold_buttons"];
+  web_cfg.auto_hold_buttons = ahold.equals("true");
+  String ssid = doc["wifi_ssid1"];
+  strncpy(web_cfg.wifi_ssid1,ssid.c_str(),24);
+  String pwd = doc["wifi_password1"];
+  strncpy(web_cfg.wifi_password1,pwd.c_str(),24);
+  String mqttserver = doc["mqtt_server"];
+  strncpy(web_cfg.mqtt_server,mqttserver.c_str(),24);
+  String mqttuser = doc["mqtt_user"];
+  strncpy(web_cfg.mqtt_user,mqttuser.c_str(),24);
+  String mqttpass = doc["mqtt_password"];
+  strncpy(web_cfg.mqtt_password,mqttpass.c_str(),24);
+  String ddown = doc["shutter_duration_down"];
+  web_cfg.Shutter1_duration_down=constrain(ddown.toInt(),0,120000);
+  String dup = doc["shutter_duration_up"];
+  web_cfg.Shutter1_duration_up=constrain(dup.toInt(),0,120000);
+  String dtilt = doc["shutter_duration_tilt"];
+  web_cfg.Shutter1_duration_tilt=constrain(dtilt.toInt(),0,120000);
+
+  _server->send(200, "application/json", "{}");
+
+ // copyConfig(&web_cfg,&cfg);
+ // saveConfig();    
+ // Restart();
 }

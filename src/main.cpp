@@ -65,8 +65,8 @@ unsigned long k1_down_pushed=0;
 unsigned long previousWifiAttempt = 0;
 unsigned long previousMQTTAttempt = 0;
 
-String lastCommand = "";
-String crcStatus="";
+//String lastCommand = "";
+//String crcStatus="";
 
 configuration cfg,web_cfg;
 Shutter r1;
@@ -338,10 +338,10 @@ void callback(char* topic, byte* payload, unsigned int length) {
     Serial.println(payload_copy);
   #endif
 
-  lastCommand="Topic:";
-  lastCommand+=topic;
-  lastCommand+=",  Payload:";
-  lastCommand+=payload_copy;
+  webpage.lastCommand="Topic:";
+  webpage.lastCommand+=topic;
+  webpage.lastCommand+=",  Payload:";
+  webpage.lastCommand+=payload_copy;
   
   lastCallback= millis();
 
@@ -416,6 +416,7 @@ void publishSensor() {
     if(r1.movement==stopped) //no need to save when it is moving
     {
       saveStatus(); 
+      webpage.lastCommand="status saved";
     }
    
     r1.force_update=false;

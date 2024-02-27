@@ -14,6 +14,7 @@ class WebPage{
     void handleRootPath();
     void handleConfigurePath();
     void handleUpgradePath();
+    void updateConfig();
    // void updateConfig();
     void setup();
 
@@ -412,7 +413,7 @@ label {
     grid-template-columns: 1fr 1fr;
   }
 }
-@media only screen and (min-width: 401px) and (max-width: 700px) {
+@media only screen and (min-width: 401px) {
   .container {
     grid-template-columns: 0px 22px 8em 1em 12em 1em;
   }
@@ -545,6 +546,43 @@ function sendData(field,value) {
   request.send();
 }
 
+function sendConfig()
+{
+  var data={
+      "host_name":"",
+      "tilt":"true",
+      "auto_hold_buttons":"true",
+      "wifi_ssid1":"",
+      "wifi_password1":"",
+      "mqtt_server":"",
+      "mqtt_user":"",
+      "mqtt_password":"",
+      "shutter_duration_down":"",
+      "shutter_duration_up":"",
+      "shutter_duration_tilt":""};
+
+  data.host_name= document.getElementById("host_name").value;
+  data.tilt=document.getElementById("tilt").checked;
+  data.auto_hold_buttons=document.getElementById("auto_hold_buttons").checked;
+  data.wifi_ssid1= document.getElementById("wifi_ssid1").value;
+  data.wifi_password1= document.getElementById("wifi_password1").value;
+  data.mqtt_server= document.getElementById("mqtt_server").value;
+  data.mqtt_user= document.getElementById("mqtt_user").value;
+  data.mqtt_password= document.getElementById("mqtt_password").value;
+  data.shutter_duration_down= document.getElementById("shutter_duration_down").value;
+  data.shutter_duration_up= document.getElementById("shutter_duration_up").value;
+  data.shutter_duration_tilt= document.getElementById("shutter_duration_tilt").value;
+  
+  var request = new XMLHttpRequest();
+  request.onreadystatechange = function() { 
+    if (this.readyState == 4 && this.status == 200) {
+    }
+  };
+  request.open("POST", "updateConfig");
+  request.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+  request.send(JSON.stringify(data));
+}
+
 function readConfig() {
   var xhttp = new XMLHttpRequest();
   xhttp.onreadystatechange = function() {
@@ -558,9 +596,9 @@ function readConfig() {
       document.getElementById("mqtt_server").value = resp.mqtt_server;
       document.getElementById("mqtt_user").value = resp.mqtt_user;
       document.getElementById("mqtt_password").value = resp.mqtt_password;
-      document.getElementById("Shutter1_duration_down").value = resp.Shutter1_duration_down;
-      document.getElementById("Shutter1_duration_up").value = resp.Shutter1_duration_up;
-      document.getElementById("Shutter1_duration_tilt").value = resp.Shutter1_duration_tilt;
+      document.getElementById("shutter_duration_down").value = resp.shutter_duration_down;
+      document.getElementById("shutter_duration_up").value = resp.shutter_duration_up;
+      document.getElementById("shutter_duration_tilt").value = resp.shutter_duration_tilt;
     
       if (resp.tilt=="true")
         disableStyle(".tilt");
@@ -584,39 +622,39 @@ function readConfig() {
 <body onload="readConfig();">
 <header><h1 class="header" id="device">Configuration</h1></header>
 <section class="container">
-  <label class="description" for="host_name">Name</label> <input class="full" type="text" name="host_name" id="host_name" onchange="sendData(this.id,this.value);">
+  <label class="description" for="host_name">Name</label> <input class="full" type="text" name="host_name" id="host_name">
 </section>
 
 <h2>Shutter type</h2>
 <section class="container">
-<label class="description" for="tilt">Tilt</label><input class="checkbox" type="checkbox" name="tilt" id="tilt" onchange="sendData(this.id,this.checked);"> 
- <label class="description" for="auto_hold_buttons">Auto hold buttons</label> <input class="checkbox" type="checkbox" name="auto_hold_buttons" id="auto_hold_buttons" onchange="sendData(this.id,this.checked);">
+<label class="description" for="tilt">Tilt</label><input class="checkbox" type="checkbox" name="tilt" id="tilt"> 
+ <label class="description" for="auto_hold_buttons">Auto hold buttons</label> <input class="checkbox" type="checkbox" name="auto_hold_buttons" id="auto_hold_buttons">
 </section>
 
 <h2>WiFi</h2>
 <section class="container">
-  <label class="description" for="wifi_ssid1">SSID 1</label> <input class="full" type="text" maxlength="24" name="wifi_ssid1" id="wifi_ssid1" onchange="sendData(this.id,this.value);">
-  <label class="description" for="wifi_password1">password 1</label> <input class="full" type="text" maxlength="24" name="wifi_password1" id="wifi_password1" onchange="sendData(this.id,this.value);">
+  <label class="description" for="wifi_ssid1">SSID 1</label> <input class="full" type="text" maxlength="24" name="wifi_ssid1" id="wifi_ssid1">
+  <label class="description" for="wifi_password1">password 1</label> <input class="full" type="text" maxlength="24" name="wifi_password1" id="wifi_password1">
 </section>
   
 <h2>MQTT</h2>
 <section class="container">
-  <label class="description" for="mqtt_server">Server</label> <input class="full" type="text" maxlength="24" name="mqtt_server" id="mqtt_server" onchange="sendData(this.id,this.value);">
-  <label  class="description" for="mqtt_user">User</label> <input class="full" type="text" maxlength="24" name="mqtt_user" id="mqtt_user" onchange="sendData(this.id,this.value);">
-  <label  class="description" for="mqtt_password">Password</label> <input class="full" type="text" maxlength="24" name="mqtt_password" id="mqtt_password" onchange="sendData(this.id,this.value);">
+  <label class="description" for="mqtt_server">Server</label> <input class="full" type="text" maxlength="24" name="mqtt_server" id="mqtt_server">
+  <label  class="description" for="mqtt_user">User</label> <input class="full" type="text" maxlength="24" name="mqtt_user" id="mqtt_user">
+  <label  class="description" for="mqtt_password">Password</label> <input class="full" type="text" maxlength="24" name="mqtt_password" id="mqtt_password">
 </section>  
 
 <h2>Parameters</h2>
 <section class="container">
   
   <span class="description">Duration down</span>
-  <div class="first"><input type="number" min="0" max="120000" name="Shutter1_duration_down" id="Shutter1_duration_down" onchange="sendData(this.id,this.value);"> ms</div>
+  <div class="first"><input type="number" min="0" max="120000" name="shutter_duration_down" id="shutter_duration_down"> ms</div>
   
   <span class="description">Duration up</span>
-  <div class="first"><input type="number" min="0" max="120000" name="Shutter1_duration_up" id="Shutter1_duration_up" onchange="sendData(this.id,this.value);"> ms</div>
+  <div class="first"><input type="number" min="0" max="120000" name="shutter_duration_up" id="shutter_duration_up"> ms</div>
   
   <span class="description tilt">Duration tilt</span>
-  <div class="first tilt"><input type="number" min="0" max="120000" name="Shutter1_duration_tilt" id="Shutter1_duration_tilt" onchange="sendData(this.id,this.value);"> ms</div>
+  <div class="first tilt"><input type="number" min="0" max="120000" name="shutter_duration_tilt" id="shutter_duration_tilt"> ms</div>
 </section>
   
 <br />
@@ -625,6 +663,7 @@ function readConfig() {
 <button type="button" class="reset" onclick="location.href='/';">Back</button>
 <button type="button" class="reset" onmouseup="pushButton(77)">Load defaults</button>
 <button type="button" class="reset" onmouseup="pushButton(88)">Save and restart</button>
+<button type="button" class="reset" onmouseup="sendConfig()">Save Configuration</button>
 </section>
 </body>
 </html>
