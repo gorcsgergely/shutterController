@@ -70,6 +70,7 @@ String crcStatus="";
 
 configuration cfg,web_cfg;
 Shutter r1;
+float upper_stop_offset=1000;
 
 // MQTT callback declaratiion (definition below)
 void callback(char* topic, byte* payload, unsigned int length); 
@@ -174,7 +175,14 @@ void setup() {
     webpage.crcStatus+="CRC config failed. ";
   };  
   copyConfig(&cfg,&web_cfg); // copy config to web_cfg as well
-  loadStatus();
+  if (loadStatus()){
+    if(cfg.tilt)
+    webpage.crcStatus += "CRC status OK: [("+String(r1.getPosition())+","+String(r1.getTilt())+")] loaded. ";
+    else   webpage.crcStatus += "CRC status OK: [("+String(r1.getPosition())+")] loaded. ";
+  }
+  else {
+    webpage.crcStatus += "CRC status failed!";
+  };
 
   pinMode(GPIO_KEY1, INPUT);
   pinMode(GPIO_KEY2, INPUT);

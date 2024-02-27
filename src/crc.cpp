@@ -1,5 +1,6 @@
 #include "config.h"
 #include "crc.h"
+#include "shutter_class.h"
 
 /*****************************
  *  EEPROM MAP
@@ -150,7 +151,7 @@ void saveStatus() {
   EEPROM.commit();
 }
 
-void loadStatus() {
+boolean loadStatus() {
   unsigned long check1;
   unsigned long check2;
   
@@ -163,12 +164,8 @@ void loadStatus() {
       Serial.println("EEPROM CRC check OK, reading stored values.");
     #endif
     r1.setPosition(p.r1_position);
-    if (cfg.tilt) {
-      r1.setTilt(p.r1_tilt);
-      crcStatus += "CRC status OK: [("+String(p.r1_position)+","+String(p.r1_tilt)+")] loaded. ";
-    } else {
-      crcStatus += "CRC status OK: ["+String(p.r1_position)+"] loaded. ";
-    }
+    if (cfg.tilt) r1.setTilt(p.r1_tilt);
+    return true;
     #ifdef DEBUG
       Serial.printf("shutter position %d\n",p.r1_position);
     #endif
@@ -180,7 +177,7 @@ void loadStatus() {
     if (cfg.tilt) {
       r1.setTilt(0);
     }
-    crcStatus += "CRC status failed! ";
+    return false;
 //    r1.Calibrate();   Ideally, I woudl need to calibrate here. But what if it restarts at night? Disable for now!
 //    r2.Calibrate();
   }

@@ -1,9 +1,9 @@
-#ifndef Shutter_CLASS_H
-#define Shutter_CLASS_H
+#ifndef SHUTTER_CLASS_H
+#define SHUTTER_CLASS_H
 
 #include "config.h"
 
-float upper_stop_offset=1000;
+extern float upper_stop_offset;
 #define lower_stop_offset  10000.0 // how far (ms) to go beyond bottom stop (make sure it is stopped, and sort of callibrate)
 #define hold_button_delay 1000 // if button is held longer than this, the shutter will stop after the button is released. Otherwise it will keep going till the end
 #define max_hold_time 60000 // if I hold button longer then this, release it
