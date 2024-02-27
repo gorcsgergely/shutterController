@@ -121,7 +121,18 @@ GPIO26	power sensor UART Rx
 
 #endif
 
+struct topics {
+  char publish_position[50];
+  char publish_tilt[50];
+  char subscribe_command[50];
+  char subscribe_position[50];
+  char subscribe_tilt[50]; 
+  char subscribe_calibrate[50];
+  char subscribe_reboot[50];
+  char subscribe_reset[50]; // currently not used
+};
 
+extern topics mqtt_topics;
 
 struct configuration {
   boolean tilt;
@@ -136,14 +147,14 @@ struct configuration {
   char mqtt_server[25];
   char mqtt_user[25];
   char mqtt_password[25];
-  char publish_position1[50];
+ /* char publish_position1[50];
   char publish_tilt1[50];
   char subscribe_command1[50];
   char subscribe_position1[50];
   char subscribe_tilt1[50]; 
   char subscribe_calibrate[50];
   char subscribe_reboot[50];
-  char subscribe_reset[50]; // currently not used
+  char subscribe_reset[50]; */// currently not used
   unsigned long Shutter1_duration_down;
   unsigned long Shutter1_duration_up;
   unsigned long Shutter1_duration_tilt;

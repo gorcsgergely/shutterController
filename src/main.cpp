@@ -35,7 +35,7 @@ cover:
  
 */
 #include <Arduino.h>
-#define DEBUG 1
+//#define DEBUG 1
 //#define DEBUG_updates 1
 
 #include <WiFi.h>  // ESP8266 WiFi module
@@ -70,6 +70,7 @@ String crcStatus="";
 
 configuration cfg,web_cfg;
 Shutter r1;
+topics mqtt_topics;
 float upper_stop_offset=1000;
 
 // MQTT callback declaratiion (definition below)
@@ -296,12 +297,12 @@ void mqtt_reconnect() {
     // publishSensor();
 
     // resubscribe
-    mqttClient.subscribe(cfg.subscribe_command1);  // listen to control for cover 1
-    mqttClient.subscribe(cfg.subscribe_position1);  // listen to cover 1 postion set
-    mqttClient.subscribe(cfg.subscribe_reboot);  // listen for reboot command
-    mqttClient.subscribe(cfg.subscribe_calibrate);  // listen for calibration command
+    mqttClient.subscribe(mqtt_topics.subscribe_command);  // listen to control for cover 1
+    mqttClient.subscribe(mqtt_topics.subscribe_position);  // listen to cover 1 postion set
+    mqttClient.subscribe(mqtt_topics.subscribe_reboot);  // listen for reboot command
+    mqttClient.subscribe(mqtt_topics.subscribe_calibrate);  // listen for calibration command
     if (cfg.tilt) {
-      mqttClient.subscribe(cfg.subscribe_tilt1);  // listen for cover 1 tilt position set
+      mqttClient.subscribe(mqtt_topics.subscribe_tilt);  // listen for cover 1 tilt position set
     }
   } else {
    // digitalWrite(SLED, HIGH);   // Turn the Status Led off
@@ -313,13 +314,12 @@ void mqtt_reconnect() {
 }
 
 void Restart() {
-    mqttClient.publish(cfg.subscribe_command1 , "" , true);
-    mqttClient.publish(cfg.subscribe_position1 , "" , true);
-    mqttClient.publish(cfg.publish_position1 , "" , true);
+    mqttClient.publish(mqtt_topics.subscribe_command , "" , true);
+    mqttClient.publish(mqtt_topics.subscribe_position , "" , true);
+    mqttClient.publish(mqtt_topics.publish_position , "" , true);
     if (cfg.tilt) {
-      mqttClient.publish(cfg.subscribe_tilt1 , "" , true);
-      mqttClient.publish(cfg.publish_tilt1 , "" , true);
-
+      mqttClient.publish(mqtt_topics.subscribe_tilt , "" , true);
+      mqttClient.publish(mqtt_topics.publish_tilt , "" , true);
     }       
     ESP.restart();  
 }
@@ -345,7 +345,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
   
   lastCallback= millis();
 
-  if (strcmp(topic, cfg.subscribe_command1) == 0) {
+  if (strcmp(topic, mqtt_topics.subscribe_command) == 0) {
 
     if (strcmp(payload_copy,payload_open) == 0) {
       r1.Start_up();
@@ -354,7 +354,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
     } else if (strcmp(payload_copy,payload_stop) == 0) {
       r1.Stop(); 
     }
-  } else if (strcmp(topic, cfg.subscribe_position1) == 0) {
+  } else if (strcmp(topic, mqtt_topics.subscribe_position) == 0) {
       #ifdef _reverse_position_mapping_
         int p = map(constrain(atoi(payload_copy),0,100),0,100,100,0);
       #else
@@ -366,16 +366,16 @@ void callback(char* topic, byte* payload, unsigned int length) {
       } else {
         r1.force_update=true;
       }    
-  } else if (cfg.tilt && strcmp(topic, cfg.subscribe_tilt1) == 0) {
+  } else if (cfg.tilt && strcmp(topic, mqtt_topics.subscribe_tilt) == 0) {
       int tilt = constrain(atoi(payload_copy),0,100);
       if (tilt!=r1.getTilt()) {      
         r1.tilt_it(tilt);
       } else {
         r1.force_update=true;
       }
-  }  else if (strcmp(topic, cfg.subscribe_calibrate) == 0) {
+  }  else if (strcmp(topic, mqtt_topics.subscribe_calibrate) == 0) {
     r1.Calibrate();
-  } else if (strcmp(topic, cfg.subscribe_reboot) == 0) {    
+  } else if (strcmp(topic, mqtt_topics.subscribe_reboot) == 0) {    
      Restart();
   }
   free(payload_copy);
@@ -405,20 +405,18 @@ void publishSensor() {
     #else
       snprintf(message1,10,"%d",r1.getPosition());
     #endif
-    mqttClient.publish(cfg.publish_position1, message1 , false);
-    //yield();
 
-    //yield();
+    mqttClient.publish(mqtt_topics.publish_position, message1 , false);
+
     if (cfg.tilt) {
       snprintf(message2,10, "%d", r1.getTilt());
-      mqttClient.publish(cfg.publish_tilt1, message2 , false);
-      //yield();
-
+      mqttClient.publish(mqtt_topics.publish_tilt, message2 , false);
     }
-     if(r1.movement==stopped) //no need to save when it is moving
-     {
+
+    if(r1.movement==stopped) //no need to save when it is moving
+    {
       saveStatus(); 
-     }
+    }
    
     r1.force_update=false;
 

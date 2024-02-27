@@ -179,23 +179,7 @@ void WebPage::updateField() {
  } else if (t_field.equals("mqtt_user")) {
     strncpy(web_cfg.mqtt_user,t_value.c_str(),24);
  } else if (t_field.equals("mqtt_password")) {
-    strncpy(web_cfg.mqtt_password,t_value.c_str(),24);
- } else if (t_field.equals("publish_position1")) {
-    strncpy(web_cfg.publish_position1,t_value.c_str(),49);
- } else if (t_field.equals("publish_tilt1")) {
-    strncpy(web_cfg.publish_tilt1,t_value.c_str(),49);
- } else if (t_field.equals("subscribe_command1")) {
-    strncpy(web_cfg.subscribe_command1,t_value.c_str(),49);
- }  else if (t_field.equals("subscribe_position1")) {
-    strncpy(web_cfg.subscribe_position1,t_value.c_str(),49);
- }  else if (t_field.equals("subscribe_tilt1")) {
-    strncpy(web_cfg.subscribe_tilt1,t_value.c_str(),49);
- }  else if (t_field.equals("subscribe_calibrate")) {
-    strncpy(web_cfg.subscribe_calibrate,t_value.c_str(),49);
- } else if (t_field.equals("subscribe_reboot")) {
-    strncpy(web_cfg.subscribe_reboot,t_value.c_str(),49);
- } else if (t_field.equals("subscribe_reset")) {
-    strncpy(web_cfg.subscribe_reset,t_value.c_str(),49);   
+    strncpy(web_cfg.mqtt_password,t_value.c_str(),24);  
  } else if (t_field.equals("Shutter1_duration_down")) {
     web_cfg.Shutter1_duration_down=constrain(t_value.toInt(),0,120000);
  }  else if (t_field.equals("Shutter1_duration_up")) {
@@ -218,14 +202,14 @@ void WebPage::readConfig() {
   root["mqtt_server"] = web_cfg.mqtt_server;
   root["mqtt_user"] = web_cfg.mqtt_user;
   root["mqtt_password"] = web_cfg.mqtt_password;
-  root["publish_position1"] = web_cfg.publish_position1;
+ /* root["publish_position1"] = web_cfg.publish_position1;
   root["publish_tilt1"] = web_cfg.publish_tilt1;
   root["subscribe_command1"] = web_cfg.subscribe_command1;
   root["subscribe_position1"] = web_cfg.subscribe_position1;
   root["subscribe_tilt1"] = web_cfg.subscribe_tilt1;
   root["subscribe_calibrate"] = web_cfg.subscribe_calibrate;
   root["subscribe_reboot"] = web_cfg.subscribe_reboot;
-  root["subscribe_reset"] = web_cfg.subscribe_reset;
+  root["subscribe_reset"] = web_cfg.subscribe_reset;*/
   root["Shutter1_duration_down"] = web_cfg.Shutter1_duration_down;
   root["Shutter1_duration_up"] = web_cfg.Shutter1_duration_up;
   root["Shutter1_duration_tilt"] = web_cfg.Shutter1_duration_tilt;
