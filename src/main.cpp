@@ -520,8 +520,8 @@ void loop() {
     if (!wifiConnected) //just (re)connected
     {
       wifiConnected=true;
-      MDNS.begin(cfg.host_name);
-      MDNS.addService("http", "tcp", 80);
+      //MDNS.begin(cfg.host_name);
+      //MDNS.addService("http", "tcp", 80);
     }
     //lastWiFiConnect=now;  // Not used at the moment
     ArduinoOTA.handle(); // OTA first
@@ -530,23 +530,20 @@ void loop() {
     } else {
       if((unsigned long)(now - previousMQTTAttempt) > MQTT_RETRY_INTERVAL)//every 10 sec
       {
-        //digitalWrite(SLED, HIGH);   // Turn the Status Led off
         mqtt_reconnect();  
         previousMQTTAttempt = now;    
       }
     }   
     httpserver.handleClient();         // Web handling
-     // MDNS.update(); //for web firmware upload
   } else{ 
     if(wifiConnected) //just disconnected
     {
       wifiConnected=false;
-      MDNS.end();
+      //MDNS.end();
     }
     if ((WiFi.status() != WL_CONNECTED) && ((unsigned long)(now - previousWifiAttempt) > WIFI_RETRY_INTERVAL)) {//every 30 sec
       digitalWrite(SLED, HIGH);   // Turn the Status Led off
       WiFi.disconnect();
-     // WiFi.reconnect();
       WiFi.begin(cfg.wifi_ssid1, cfg.wifi_password1);
       previousWifiAttempt = now;
     } 

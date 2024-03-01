@@ -53,7 +53,7 @@ void WebPage::setup(){
   _server->on("/readMain", std::bind(&WebPage::readMain, this));
   _server->on("/readConfig",std::bind(&WebPage::readConfig, this));
   _server->on("/pressButton",std::bind(&WebPage::pressButton, this));
-  _server->on("/updateField",std::bind(&WebPage::updateField, this));
+ // _server->on("/updateField",std::bind(&WebPage::updateField, this));
   _server->on("/updateConfig", HTTP_POST, std::bind(&WebPage::updateConfig, this));
 }
 
@@ -159,36 +159,6 @@ void WebPage::pressButton() {
     break;
  }
  _server->send(200, "text/plane", t_state); //Send web page
-}
-
-void WebPage::updateField() {
- String t_field = _server->arg("field");
- String t_value = _server->arg("value");
- if (t_field.equals("host_name")) {
-    strncpy(web_cfg.host_name,t_value.c_str(),24);
- } else if (t_field.equals("auto_hold_buttons")) {
-    web_cfg.auto_hold_buttons = t_value.equals("true");  
- } else if (t_field.equals("tilt")) {
-    web_cfg.tilt = t_value.equals("true");
- }  else if (t_field.equals("wifi_ssid1")) {
-    strncpy(web_cfg.wifi_ssid1,t_value.c_str(),24);
- } else if (t_field.equals("wifi_password1")) {
-    strncpy(web_cfg.wifi_password1,t_value.c_str(),24);
- } else if (t_field.equals("mqtt_server")) {
-    strncpy(web_cfg.mqtt_server,t_value.c_str(),24);
- } else if (t_field.equals("mqtt_user")) {
-    strncpy(web_cfg.mqtt_user,t_value.c_str(),24);
- } else if (t_field.equals("mqtt_password")) {
-    strncpy(web_cfg.mqtt_password,t_value.c_str(),24);  
- } else if (t_field.equals("Shutter1_duration_down")) {
-    web_cfg.Shutter1_duration_down=constrain(t_value.toInt(),0,120000);
- }  else if (t_field.equals("Shutter1_duration_up")) {
-    web_cfg.Shutter1_duration_up=constrain(t_value.toInt(),0,120000);
- } else if (t_field.equals("Shutter1_duration_tilt")) {
-    web_cfg.Shutter1_duration_tilt=constrain(t_value.toInt(),0,120000);
- } 
- _server->send(200, "text/plane", t_field); //Send web page
- _server->send(200, "text/plane", t_value); //Send web page  
 }
 
 void WebPage::readConfig() {

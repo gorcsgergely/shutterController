@@ -9,13 +9,11 @@ class WebPage{
     WebPage(WebServer *server);
     void readMain();
     void readConfig();
-    void updateField();
     void pressButton();
     void handleRootPath();
     void handleConfigurePath();
     void handleUpgradePath();
     void updateConfig();
-   // void updateConfig();
     void setup();
 
   public:
@@ -496,7 +494,7 @@ function pushButton(b) {
   request.send();
   if(b==77)
     readConfig();
-  if(b==89) {
+  if(b==88) {
     location.href='/';
   }
 }
@@ -534,13 +532,6 @@ function sendData(field,value) {
       disableStyle(".tilt");
     else
       enableStyle(".tilt");
-  }
-
-  if (field=="wifi_multi") {
-    if (value)
-      disableStyle(".wifi_multi");
-    else
-      enableStyle(".wifi_multi");
   }
   request.open("GET", "updateField?field="+field+"&value="+value, true);
   request.send();
@@ -581,6 +572,7 @@ function sendConfig()
   request.open("POST", "updateConfig");
   request.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
   request.send(JSON.stringify(data));
+  location.href='/';
 }
 
 function readConfig() {
@@ -662,8 +654,7 @@ function readConfig() {
 <section class="commands">
 <button type="button" class="reset" onclick="location.href='/';">Back</button>
 <button type="button" class="reset" onmouseup="pushButton(77)">Load defaults</button>
-<button type="button" class="reset" onmouseup="pushButton(88)">Save and restart</button>
-<button type="button" class="reset" onmouseup="sendConfig()">Save Configuration</button>
+<button type="button" class="reset" onmouseup="sendConfig()">Save and restart</button>
 </section>
 </body>
 </html>

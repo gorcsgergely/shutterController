@@ -112,9 +112,6 @@ void defaultConfig(configuration* c) {
   strncpy(c->host_name,_host_name_,24);
   strncpy(c->wifi_ssid1,_ssid1_,24);
   strncpy(c->wifi_password1,_password1_,24);
-  strncpy(c->wifi_ssid2,_ssid1_,24);
-  strncpy(c->wifi_password2,_password1_,24);
-  c->wifi_multi=false;
   strncpy(c->mqtt_server,_mqtt_server_,24);
   strncpy(c->mqtt_user,_mqtt_user_,24);
   strncpy(c->mqtt_password,_mqtt_password_,24);
@@ -144,9 +141,6 @@ void copyConfig(configuration* from,configuration* to) {
   strncpy(to->host_name,from->host_name,24);
   strncpy(to->wifi_ssid1,from->wifi_ssid1,24);
   strncpy(to->wifi_password1,from->wifi_password1,24);
-  strncpy(to->wifi_ssid2,from->wifi_ssid2,24);
-  strncpy(to->wifi_password2,from->wifi_password2,24);
-  to->wifi_multi=from->wifi_multi;
   strncpy(to->mqtt_server,from->mqtt_server,24);
   strncpy(to->mqtt_user,from->mqtt_user,24);
   strncpy(to->mqtt_password,from->mqtt_password,24);

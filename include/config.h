@@ -141,9 +141,6 @@ struct configuration {
   char host_name[25];
   char wifi_ssid1[25];
   char wifi_password1[25];
-  char wifi_ssid2[25];
-  char wifi_password2[25];
-  boolean wifi_multi;
   char mqtt_server[25];
   char mqtt_user[25];
   char mqtt_password[25];
