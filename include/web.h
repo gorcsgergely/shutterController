@@ -21,7 +21,6 @@ class WebPage{
     unsigned long lastCallback = 0; // timestamp - last MQTT callback received
     unsigned long lastWiFiDisconnect=0;
     unsigned long lastWiFiConnect=0;
-    unsigned long lastMQTTDisconnect=0; // last time MQTT was disconnected
     unsigned long WiFiLEDOn=0;
     unsigned long k1_up_pushed=0;
     unsigned long k1_down_pushed=0;

@@ -18,7 +18,7 @@ const boolean button_press_delay = true;
 #define _button_delay_ 100  
 
 //MQTT parameters (has to be unique for each device)
-const char _publish_position1_[] = "blinds/blind0/state";
+/*const char _publish_position1_[] = "blinds/blind0/state";
 const char _publish_tilt1_[] = "blinds/blind0/tilt-state";
 const char _subscribe_command1_[] = "blinds/blind0/set";
 const char _subscribe_position1_[] = "blinds/blind0/position";
@@ -26,7 +26,7 @@ const char _subscribe_tilt1_[] = "blinds/blind0/tilt";
 
 const char _subscribe_calibrate_[] = "blinds/blind0/calibrate";
 const char _subscribe_reset_[] = "blinds/blind0/reset";
-const char _subscribe_reboot_[] = "blinds/blind0/reboot";
+const char _subscribe_reboot_[] = "blinds/blind0/reboot";*/
 
 // Time for each rolling shutter to go down and up - you need to measure this and configure - default values - can be changed via web (if enabled)
 #define _Shutter1_duration_down_ 51200

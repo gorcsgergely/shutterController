@@ -57,7 +57,6 @@ unsigned long lastUpdate = 0; // timestamp - last MQTT update
 unsigned long lastCallback = 0; // timestamp - last MQTT callback received
 unsigned long lastWiFiDisconnect=0;
 unsigned long lastWiFiConnect=0;
-unsigned long lastMQTTDisconnect=0; // last time MQTT was disconnected
 unsigned long WiFiLEDOn=0;
 unsigned long k1_up_pushed=0;
 unsigned long k1_down_pushed=0;
@@ -148,6 +147,52 @@ void setup_wifi() {
   #endif
 }
 
+/********************************
+* R E C O N N E C T   M Q T T 
+********************************/
+void mqtt_reconnect() {
+  #ifdef DEBUG
+    Serial.print("Attempting MQTT connection...");
+  #endif
+
+  //unsigned long now = millis();
+  
+  //uint8_t mac[6];
+  //WiFi.macAddress(mac);
+  String clientName(cfg.host_name);
+  /*clientName += "-";
+  clientName += macToStr(mac);
+  clientName += "-";
+  clientName += String(micros() & 0xff, 16);*/
+  
+  if (mqttClient.connect((char*)clientName.c_str(),cfg.mqtt_user,cfg.mqtt_password)) {
+    #ifdef DEBUG
+      Serial.println("connected");
+    #endif
+
+    // Once connected, publish an announcement...
+    //digitalWrite(SLED, LOW);   // Turn the Status Led on
+
+    // lastUpdate=0;
+    // checkSensors(); // send current sensors
+    // publishSensor();
+
+    // resubscribe
+    mqttClient.subscribe(mqtt_topics.subscribe_command);  // listen to control for cover 1
+    mqttClient.subscribe(mqtt_topics.subscribe_position);  // listen to cover 1 postion set
+    mqttClient.subscribe(mqtt_topics.subscribe_reboot);  // listen for reboot command
+    mqttClient.subscribe(mqtt_topics.subscribe_calibrate);  // listen for calibration command
+    if (cfg.tilt) {
+      mqttClient.subscribe(mqtt_topics.subscribe_tilt);  // listen for cover 1 tilt position set
+    }
+  } else {
+   // digitalWrite(SLED, HIGH);   // Turn the Status Led off
+    #ifdef DEBUG
+      Serial.print("failed, rc=");
+      Serial.print(mqttClient.state());
+    #endif
+  }
+}
 
 /********************************************
 * M A I N   A R D U I N O   S E T U P 
@@ -163,8 +208,6 @@ void setup() {
   digitalWrite(GPIO_REL1, LOW);  // Off
   digitalWrite(GPIO_REL2, LOW);  // Off
 
-// Open EEPROM
-  openMemory();
 // Open EEPROM
   openMemory();
   if (loadConfig()){
@@ -186,7 +229,7 @@ void setup() {
   pinMode(GPIO_KEY1, INPUT);
   pinMode(GPIO_KEY2, INPUT);
 
-  r1.setup("Shutter1",cfg.Shutter1_duration_down,cfg.Shutter1_duration_up,cfg.Shutter1_duration_tilt,GPIO_REL1,GPIO_REL2);
+  r1.setup(String(cfg.host_name),cfg.Shutter1_duration_down,cfg.Shutter1_duration_up,cfg.Shutter1_duration_tilt,GPIO_REL1,GPIO_REL2);
 
   #ifdef DEBUG
     Serial.begin(115200);
@@ -243,6 +286,8 @@ void setup() {
     Serial.println("Server listening");
   #endif
 
+  mqtt_reconnect();
+
   // setup done
   #ifdef DEBUG
     Serial.println("Ready");
@@ -258,57 +303,6 @@ String macToStr(const uint8_t* mac)
       result += ':';
   }
   return result;
-}
-
-/********************************
-* R E C O N N E C T   M Q T T 
-********************************/
-void mqtt_reconnect() {
-  #ifdef DEBUG
-    Serial.print("Attempting MQTT connection...");
-  #endif
-
-  unsigned long now = millis();
- // if (lastMQTTDisconnect!=0 && lastMQTTDisconnect<now && (unsigned long)(now-lastMQTTDisconnect)<10000) return;
-  if (lastMQTTDisconnect!=0 && (unsigned long)(now-lastMQTTDisconnect)<10000) return;
-  lastMQTTDisconnect=now;
-  // Attempt to connect
-  
-  uint8_t mac[6];
-  WiFi.macAddress(mac);
-  String clientName(cfg.host_name);
-  clientName += "-";
-  clientName += macToStr(mac);
-  clientName += "-";
-  clientName += String(micros() & 0xff, 16);
-  
-  if (mqttClient.connect((char*)clientName.c_str(),cfg.mqtt_user,cfg.mqtt_password)) {
-    #ifdef DEBUG
-      Serial.println("connected");
-    #endif
-
-    // Once connected, publish an announcement...
-    //digitalWrite(SLED, LOW);   // Turn the Status Led on
-
-    // lastUpdate=0;
-    // checkSensors(); // send current sensors
-    // publishSensor();
-
-    // resubscribe
-    mqttClient.subscribe(mqtt_topics.subscribe_command);  // listen to control for cover 1
-    mqttClient.subscribe(mqtt_topics.subscribe_position);  // listen to cover 1 postion set
-    mqttClient.subscribe(mqtt_topics.subscribe_reboot);  // listen for reboot command
-    mqttClient.subscribe(mqtt_topics.subscribe_calibrate);  // listen for calibration command
-    if (cfg.tilt) {
-      mqttClient.subscribe(mqtt_topics.subscribe_tilt);  // listen for cover 1 tilt position set
-    }
-  } else {
-   // digitalWrite(SLED, HIGH);   // Turn the Status Led off
-    #ifdef DEBUG
-      Serial.print("failed, rc=");
-      Serial.print(mqttClient.state());
-    #endif
-  }
 }
 
 void Restart() {
@@ -525,15 +519,16 @@ void loop() {
     }
     //lastWiFiConnect=now;  // Not used at the moment
     ArduinoOTA.handle(); // OTA first
-    if (mqttClient.loop()) {
-       publishSensor();
-    } else {
+    if(!mqttClient.connected()){
       if((unsigned long)(now - previousMQTTAttempt) > MQTT_RETRY_INTERVAL)//every 10 sec
       {
         mqtt_reconnect();  
         previousMQTTAttempt = now;    
       }
-    }   
+    }
+    if (mqttClient.loop()) {
+       publishSensor();
+    } 
     httpserver.handleClient();         // Web handling
   } else{ 
     if(wifiConnected) //just disconnected

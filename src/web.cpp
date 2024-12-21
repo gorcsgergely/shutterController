@@ -91,8 +91,7 @@ void WebPage::readMain() {
     root["mqtt"]= mqttResults[mqttClient.state()+4];
   }*/
   timeDiff(buf1,25,lastWiFiDisconnect);
-  timeDiff(buf2,25,lastMQTTDisconnect);
-  root["disconnect"]=((lastWiFiDisconnect==0)?"N/A":(String(buf1)+" ago"))+","+((lastMQTTDisconnect==0)?"N/A":(String(buf2)+" ago"));
+  root["disconnect"]=((lastWiFiDisconnect==0)?"N/A":(String(buf1)+" ago"));
   timeDiff(buf1,25,0);
   root["crc"]=crcStatus + " ("+String(buf1)+" ago)";
   root["mem"]="program: "+String(ESP.getFreeSketchSpace()/1024)+" kB | heap: "+String(ESP.getFreeHeap()/1024)+" kB";
