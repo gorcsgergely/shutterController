@@ -198,7 +198,7 @@ function pushButton(b) {
 setInterval(function() {
   // Call a function repetatively with 0.5 Second interval
   readMain();
-}, 1000); //500mSeconds update rate
+}, 1000); //1000mSeconds update rate
 
 function enableStyle(unique_title) {
   var css=document.styleSheets[0];

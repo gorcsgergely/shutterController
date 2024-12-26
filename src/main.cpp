@@ -64,6 +64,7 @@ unsigned long k1_down_pushed=0;
 unsigned long previousWifiAttempt = 0;
 unsigned long previousMQTTAttempt = 0;
 boolean wifiConnected=false;
+boolean mqttConnected=false;
 
 //String lastCommand = "";
 //String crcStatus="";
@@ -520,15 +521,23 @@ void loop() {
     //lastWiFiConnect=now;  // Not used at the moment
     ArduinoOTA.handle(); // OTA first
     if(!mqttClient.connected()){
+      if(mqttConnected) //just disconnected
+      {
+        mqttConnected=false;
+      }
       if((unsigned long)(now - previousMQTTAttempt) > MQTT_RETRY_INTERVAL)//every 10 sec
       {
         mqtt_reconnect();  
         previousMQTTAttempt = now;    
       }
+    } else{
+      if(mqttConnected==false){//just reconnected
+        mqttConnected=true;
+      }
+      if (mqttClient.loop()) {
+        publishSensor();
+      } 
     }
-    if (mqttClient.loop()) {
-       publishSensor();
-    } 
     httpserver.handleClient();         // Web handling
   } else{ 
     if(wifiConnected) //just disconnected
