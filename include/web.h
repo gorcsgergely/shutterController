@@ -3,10 +3,11 @@
 
 #include <WebServer.h>
 #include <HTTPUpdateServer.h>
+#include <PubSubClient.h>
 
 class WebPage{
   public:
-    WebPage(WebServer *server);
+    WebPage(WebServer *server, PubSubClient *mqttClient);
     void readMain();
     void readConfig();
     void pressButton();
@@ -31,9 +32,10 @@ class WebPage{
   private:
     void Restart();
     int WifiGetRssiAsQuality(int rssi);
-    void timeDiff(char *buf,size_t len,unsigned long lastUpdate);
+    void timeDiff(char *buf,size_t len,unsigned long eventtime);
   private:
     WebServer* _server;
+    PubSubClient* _mqttClient;
 };
 
 
@@ -70,8 +72,7 @@ const char MAIN_page[] = R"#(
   grid-template-rows: 2.5em 2.5em 2.5em 2.5em;
 }
 .commands {
-  display:grid;
-  grid-template-columns: 160px 160px 160px 160px;
+
 }
 @media only screen and (max-width: 700px) {
   .remote_control {
@@ -95,8 +96,7 @@ const char MAIN_page[] = R"#(
     grid-template-rows: 2.5em 2.5em 2.5em 2.5em;
   }
   .commands {
-    display:grid;
-    grid-template-columns: 1fr 1fr;
+
   }
 }
 html {
@@ -107,10 +107,10 @@ html {
 }
 body {
   padding: 20px; 
-  background-color: #232323;
+  background-color: #fafafa;
   font-family: Verdana, "Times New Roman", Times, serif;
   font-size: 100%; 
-  color: white;
+  color: #232323;
 }
 input, label, div {
   display: flex;
@@ -143,18 +143,18 @@ h1, h2 {
   font-family: "Bahnschrift Condensed", sans-serif; 
 }
 h1 { 
-  color: #1fa2ec;
+  color: #5533dd;
   font-size: 2em; 
 }
 h2 { 
-  color:khaki;
+  color: #5533dd;
   margin-top: 29px; 
   margin-bottom: 5px;
   font-size: 1.5 em;  
 }
 .topic { font-weight: bold; }
 .button {
-  background-color: #1fa3ec;
+  background-color: #5533dd;
   border-radius: 0.3rem;
   transition-duration: 0.4s;
   cursor: pointer;
@@ -311,7 +311,7 @@ function readMain() {
   <p><span class="topic">Status:</span> <span id="mqtt"></span></p>
   <p><span class="topic">Last received message:</span> <span id="mqttmsg"></span></p>
   <p><span class="topic">Last update:</span> <span id="update"></span></p>
-  <p><span class="topic">Last loss of WiFi,MQTT:</span> <span id="disconnect"></span></p>
+  <p><span class="topic">Last loss of WiFi:</span> <span id="disconnect"></span></p>
   <p><span class="topic">Boot CRC check:</span> <span id="crc"></span></p>
   <p><span class="topic">Free memory:</span> <span id="mem"></span></p>
 </section>
@@ -374,8 +374,7 @@ label.description,label.first,label.second,.checkbox {
   grid-column: 2/-1;
 }
 .commands {
-  display:grid;
-  grid-template-columns: 160px 160px 160px 160px;
+
 }
 input, select {
     height: 2.2em;
@@ -407,7 +406,7 @@ label {
     grid-column: 5/7;
   }
   .commands {
-    grid-template-columns: 1fr 1fr;
+ 
   }
 }
 @media only screen and (min-width: 401px) {
@@ -424,7 +423,7 @@ label {
     grid-column: 5/7;
   }
   .commands {
-    grid-template-columns: 1fr 1fr;
+   
   }
 }
 html {
@@ -435,25 +434,25 @@ html {
 }
 body {
   padding: 20px; 
-  background-color: #232323;
+  background-color: #fafafa;
   font-family: Verdana, "Times New Roman", Times, serif;
   font-size: 100%; 
-  color: white;
+  color: #232323;
 } 
 
 h1 { 
-  color: #1fa2ec;
+  color: #5533dd;
   font-size: 2em; 
 }
 h2 { 
-  color:khaki;
+  color:#5533dd;
   margin-top: 29px; 
   margin-bottom: 5px;
   font-size: 1.5 em;  
 }
 .topic { font-weight: bold; }
 .button {
-  background-color: #1fa3ec;
+  background-color: #5533dd;
   border-radius: 0.3rem;
   transition-duration: 0.4s;
   cursor: pointer;
@@ -545,8 +544,22 @@ function sendConfig()
       "wifi_ssid1":"",
       "wifi_password1":"",
       "mqtt_server":"",
-      "mqtt_user":"",
-      "mqtt_password":"",
+      "s1_p":"",
+      "s1_t":"",
+      "s2_p":"",
+      "s2_t":"",
+      "s3_p":"",
+      "s3_t":"",
+      "s4_p":"",
+      "s4_t":"",
+      "s5_p":"",
+      "s5_t":"",
+      "s6_p":"",
+      "s6_t":"",
+      "s7_p":"",
+      "s7_t":"",
+      "s8_p":"",
+      "s8_t":"",
       "shutter_duration_down":"",
       "shutter_duration_up":"",
       "shutter_duration_tilt":""};
@@ -557,8 +570,22 @@ function sendConfig()
   data.wifi_ssid1= document.getElementById("wifi_ssid1").value;
   data.wifi_password1= document.getElementById("wifi_password1").value;
   data.mqtt_server= document.getElementById("mqtt_server").value;
-  data.mqtt_user= document.getElementById("mqtt_user").value;
-  data.mqtt_password= document.getElementById("mqtt_password").value;
+  data.s1_p= document.getElementById("s1_p").value;
+  data.s1_t= document.getElementById("s1_t").value;
+  data.s2_p= document.getElementById("s2_p").value;
+  data.s2_t= document.getElementById("s2_t").value;
+  data.s3_p= document.getElementById("s3_p").value;
+  data.s3_t= document.getElementById("s3_t").value;
+  data.s4_p= document.getElementById("s4_p").value;
+  data.s4_t= document.getElementById("s4_t").value;
+  data.s5_p= document.getElementById("s5_p").value;
+  data.s5_t= document.getElementById("s5_t").value;
+  data.s6_p= document.getElementById("s6_p").value;
+  data.s6_t= document.getElementById("s6_t").value;
+  data.s7_p= document.getElementById("s7_p").value;
+  data.s7_t= document.getElementById("s7_t").value;
+  data.s8_p= document.getElementById("s8_p").value;
+  data.s8_t= document.getElementById("s8_t").value;
   data.shutter_duration_down= document.getElementById("shutter_duration_down").value;
   data.shutter_duration_up= document.getElementById("shutter_duration_up").value;
   data.shutter_duration_tilt= document.getElementById("shutter_duration_tilt").value;
@@ -585,8 +612,22 @@ function readConfig() {
       document.getElementById("wifi_ssid1").value = resp.wifi_ssid1;
       document.getElementById("wifi_password1").value = resp.wifi_password1;
       document.getElementById("mqtt_server").value = resp.mqtt_server;
-      document.getElementById("mqtt_user").value = resp.mqtt_user;
-      document.getElementById("mqtt_password").value = resp.mqtt_password;
+      document.getElementById("s1_p").value = resp.s1_p;
+      document.getElementById("s1_t").value = resp.s1_t;
+      document.getElementById("s2_p").value = resp.s2_p;
+      document.getElementById("s2_t").value = resp.s2_t;
+      document.getElementById("s3_p").value = resp.s3_p;
+      document.getElementById("s3_t").value = resp.s3_t;
+      document.getElementById("s4_p").value = resp.s4_p;
+      document.getElementById("s4_t").value = resp.s4_t;
+      document.getElementById("s5_p").value = resp.s5_p;
+      document.getElementById("s5_t").value = resp.s5_t;
+      document.getElementById("s6_p").value = resp.s6_p;
+      document.getElementById("s6_t").value = resp.s6_t;
+      document.getElementById("s7_p").value = resp.s7_p;
+      document.getElementById("s7_t").value = resp.s7_t;
+      document.getElementById("s8_p").value = resp.s8_p;
+      document.getElementById("s8_t").value = resp.s8_t;
       document.getElementById("shutter_duration_down").value = resp.shutter_duration_down;
       document.getElementById("shutter_duration_up").value = resp.shutter_duration_up;
       document.getElementById("shutter_duration_tilt").value = resp.shutter_duration_tilt;
@@ -594,12 +635,7 @@ function readConfig() {
       if (resp.tilt=="true")
         disableStyle(".tilt");
       else
-        enableStyle(".tilt");         
-      
-      if (resp.wifi_multi=="true")
-        disableStyle(".wifi_multi");
-      else
-        enableStyle(".wifi_multi");      
+        enableStyle(".tilt");              
     }
   };  
   xhttp.open("GET", "readConfig", true);
@@ -631,8 +667,26 @@ function readConfig() {
 <h2>MQTT</h2>
 <section class="container">
   <label class="description" for="mqtt_server">Server</label> <input class="full" type="text" maxlength="24" name="mqtt_server" id="mqtt_server">
-  <label  class="description" for="mqtt_user">User</label> <input class="full" type="text" maxlength="24" name="mqtt_user" id="mqtt_user">
-  <label  class="description" for="mqtt_password">Password</label> <input class="full" type="text" maxlength="24" name="mqtt_password" id="mqtt_password">
+</section>  
+
+<h2>Scenes</h2>
+<section class="container">
+  <label  class="description" for="s1_p">Scene#1 position</label> <input class="full" type="number" min="0" max="100" name="s1_p" id="s1_p">
+  <label  class="description" for="s1_t">Scene#1 tilt</label> <input class="full" type="number" min="0" max ="90" name="s1_t" id="s1_t">
+  <label  class="description" for="s2_p">Scene#2 position</label> <input class="full" type="number" min="0" max="100" name="s2_p" id="s2_p">
+  <label  class="description" for="s2_t">Scene#2 tilt</label> <input class="full" type="number" min="0" max ="90" name="s2_t" id="s2_t">
+  <label  class="description" for="s3_p">Scene#3 position</label> <input class="full" type="number" min="0" max="100" name="s3_p" id="s3_p">
+  <label  class="description" for="s3_t">Scene#3 tilt</label> <input class="full" type="number" min="0" max ="90" name="s3_t" id="s3_t">
+  <label  class="description" for="s4_p">Scene#4 position</label> <input class="full" type="number" min="0" max="100" name="s4_p" id="s4_p">
+  <label  class="description" for="s4_t">Scene#4 tilt</label> <input class="full" type="number" min="0" max ="90" name="s4_t" id="s4_t">
+  <label  class="description" for="s5_p">Scene#5 position</label> <input class="full" type="number" min="0" max="100" name="s5_p" id="s5_p">
+  <label  class="description" for="s5_t">Scene#5 tilt</label> <input class="full" type="number" min="0" max ="90" name="s5_t" id="s5_t">
+  <label  class="description" for="s6_p">Scene#6 position</label> <input class="full" type="number" min="0" max="100" name="s6_p" id="s6_p">
+  <label  class="description" for="s6_t">Scene#6 tilt</label> <input class="full" type="number" min="0" max ="90" name="s6_t" id="s6_t">
+  <label  class="description" for="s7_p">Scene#7 position</label> <input class="full" type="number" min="0" max="100" name="s7_p" id="s7_p">
+  <label  class="description" for="s7_t">Scene#7 tilt</label> <input class="full" type="number" min="0" max ="90" name="s7_t" id="s7_t">
+  <label  class="description" for="s8_p">Scene#8 position</label> <input class="full" type="number" min="0" max="100" name="s8_p" id="s8_p">
+  <label  class="description" for="s8_t">Scene#8 tilt</label> <input class="full" type="number" min="0" max ="90" name="s8_t" id="s8_t">
 </section>  
 
 <h2>Parameters</h2>

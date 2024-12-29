@@ -4,8 +4,9 @@
 #include "config.h"
 #include "crc.h"
 
-WebPage::WebPage(WebServer* server){
+WebPage::WebPage(WebServer* server, PubSubClient *mqttClient){
   _server = server;
+  _mqttClient = mqttClient;
 }
 
 /********************************************************
@@ -25,14 +26,14 @@ int WebPage::WifiGetRssiAsQuality(int rssi)
   return quality;
 }
 
-void WebPage::timeDiff(char *buf,size_t len,unsigned long lastUpdate){
+void WebPage::timeDiff(char *buf,size_t len,unsigned long eventtime){
     //####d, ##:##:##0
     unsigned long t = millis();
-    if(lastUpdate>t) {
+    if(eventtime>t) {
       snprintf(buf,len,"N/A");
       return;
     }
-    t=(t-lastUpdate)/1000;  // Converted to difference in seconds
+    t=(t-eventtime)/1000;  // Converted to difference in seconds
 
     int d=t/(60*60*24);
     t=t%(60*60*24);
@@ -77,7 +78,6 @@ void WebPage::readMain() {
   JsonArray position = root["position"].to<JsonArray>();
   position.add(r1.getPosition());
   //position.add(map(r1.getPosition(),0,100,100,0));
-  //position.add(map(r2.getPosition(),0,100,100,0));
 
   JsonArray tilt= root["tilt"].to<JsonArray>();
   tilt.add(r1.getTilt());
@@ -85,11 +85,11 @@ void WebPage::readMain() {
   root["device"]=String(cfg.host_name);
   root["tilting"]=cfg.tilt?"true":"false";
   root["wifi"]=String(WiFi.SSID());  
-  /*if (r1.semafor) {
-    root["mqtt"]= mqttResults[mqttClient.state()+4]+"(S1)";
+  if (r1.semafor) {
+    root["mqtt"]= mqttResults[_mqttClient->state()+4]+"(S1)";
   } else {
-    root["mqtt"]= mqttResults[mqttClient.state()+4];
-  }*/
+    root["mqtt"]= mqttResults[_mqttClient->state()+4];
+  }
   timeDiff(buf1,25,lastWiFiDisconnect);
   root["disconnect"]=((lastWiFiDisconnect==0)?"N/A":(String(buf1)+" ago"));
   timeDiff(buf1,25,0);
@@ -169,16 +169,22 @@ void WebPage::readConfig() {
   root["wifi_ssid1"] = web_cfg.wifi_ssid1;
   root["wifi_password1"] = web_cfg.wifi_password1;
   root["mqtt_server"] = web_cfg.mqtt_server;
-  root["mqtt_user"] = web_cfg.mqtt_user;
-  root["mqtt_password"] = web_cfg.mqtt_password;
- /* root["publish_position1"] = web_cfg.publish_position1;
-  root["publish_tilt1"] = web_cfg.publish_tilt1;
-  root["subscribe_command1"] = web_cfg.subscribe_command1;
-  root["subscribe_position1"] = web_cfg.subscribe_position1;
-  root["subscribe_tilt1"] = web_cfg.subscribe_tilt1;
-  root["subscribe_calibrate"] = web_cfg.subscribe_calibrate;
-  root["subscribe_reboot"] = web_cfg.subscribe_reboot;
-  root["subscribe_reset"] = web_cfg.subscribe_reset;*/
+  root["s1_p"] = web_cfg.scenes[0][0];
+  root["s1_t"] = web_cfg.scenes[0][1];
+  root["s2_p"] = web_cfg.scenes[1][0];
+  root["s2_t"] = web_cfg.scenes[1][1];
+  root["s3_p"] = web_cfg.scenes[2][0];
+  root["s3_t"] = web_cfg.scenes[2][1];
+  root["s4_p"] = web_cfg.scenes[3][0];
+  root["s4_t"] = web_cfg.scenes[3][1];
+  root["s5_p"] = web_cfg.scenes[4][0];
+  root["s5_t"] = web_cfg.scenes[4][1];
+  root["s6_p"] = web_cfg.scenes[5][0];
+  root["s6_t"] = web_cfg.scenes[5][1];
+  root["s7_p"] = web_cfg.scenes[6][0];
+  root["s7_t"] = web_cfg.scenes[6][1];
+  root["s8_p"] = web_cfg.scenes[7][0];
+  root["s8_t"] = web_cfg.scenes[7][1];
   root["shutter_duration_down"] = web_cfg.Shutter1_duration_down;
   root["shutter_duration_up"] = web_cfg.Shutter1_duration_up;
   root["shutter_duration_tilt"] = web_cfg.Shutter1_duration_tilt;
@@ -224,10 +230,38 @@ void WebPage::updateConfig() {
   strncpy(web_cfg.wifi_password1,pwd.c_str(),24);
   String mqttserver = doc["mqtt_server"];
   strncpy(web_cfg.mqtt_server,mqttserver.c_str(),24);
-  String mqttuser = doc["mqtt_user"];
-  strncpy(web_cfg.mqtt_user,mqttuser.c_str(),24);
-  String mqttpass = doc["mqtt_password"];
-  strncpy(web_cfg.mqtt_password,mqttpass.c_str(),24);
+  String s1p = doc["s1_p"];
+  web_cfg.scenes[0][0]=constrain(s1p.toInt(),0,100);
+  String s1t = doc["s1_t"];
+  web_cfg.scenes[0][1] = constrain(s1t.toInt(),0,90);
+  String s2p = doc["s2_p"];
+  web_cfg.scenes[1][0]=constrain(s2p.toInt(),0,100);
+  String s2t = doc["s2_t"];
+  web_cfg.scenes[1][1]= constrain(s2t.toInt(),0,90);
+  String s3p = doc["s3_p"];
+  web_cfg.scenes[2][0]=constrain(s3p.toInt(),0,100);
+  String s3t = doc["s3_t"];
+  web_cfg.scenes[2][1] = constrain(s3t.toInt(),0,90);
+  String s4p = doc["s4_p"];
+  web_cfg.scenes[3][0]=constrain(s4p.toInt(),0,100);
+  String s4t = doc["s4_t"];
+  web_cfg.scenes[3][1] = constrain(s4t.toInt(),0,90);
+  String s5p = doc["s5_p"];
+  web_cfg.scenes[4][0]=constrain(s5p.toInt(),0,100);
+  String s5t = doc["s5_t"];
+  web_cfg.scenes[4][1] = constrain(s5t.toInt(),0,90);
+  String s6p = doc["s6_p"];
+  web_cfg.scenes[5][0]=constrain(s6p.toInt(),0,100);
+  String s6t = doc["s6_t"];
+  web_cfg.scenes[5][1] = constrain(s6t.toInt(),0,90);
+  String s7p = doc["s7_p"];
+  web_cfg.scenes[6][0]=constrain(s7p.toInt(),0,100);
+  String s7t = doc["s7_t"];
+  web_cfg.scenes[6][1] = constrain(s7t.toInt(),0,90);
+  String s8p = doc["s8_p"];
+ web_cfg.scenes[7][0]=constrain(s8p.toInt(),0,100);
+  String s8t = doc["s8_t"];
+  web_cfg.scenes[7][1] = constrain(s8t.toInt(),0,90);
   String ddown = doc["shutter_duration_down"];
   web_cfg.Shutter1_duration_down=constrain(ddown.toInt(),0,120000);
   String dup = doc["shutter_duration_up"];

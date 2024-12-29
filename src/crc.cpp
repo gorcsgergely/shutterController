@@ -80,8 +80,10 @@ boolean loadConfig() {
   strcpy(mqtt_topics.subscribe_reboot,temp_prefix);
   strcat(mqtt_topics.subscribe_reboot,"/reboot");
 
-  strcpy(mqtt_topics.subscribe_reset,temp_prefix);
-  strcat(mqtt_topics.subscribe_reset,"/reboot");
+  strcpy(mqtt_topics.subscribe_scenes,"blinds/scene");
+
+  /*strcpy(mqtt_topics.subscribe_all, temp_prefix);
+  strcat(mqtt_topics.subscribe_all,"/+");*/
 
   EEPROM.get(sizeof(configuration),check2);
   check1=eeprom_crc(0,sizeof(configuration));
@@ -113,21 +115,14 @@ void defaultConfig(configuration* c) {
   strncpy(c->wifi_ssid1,_ssid1_,24);
   strncpy(c->wifi_password1,_password1_,24);
   strncpy(c->mqtt_server,_mqtt_server_,24);
-  strncpy(c->mqtt_user,_mqtt_user_,24);
-  strncpy(c->mqtt_password,_mqtt_password_,24);
- /* strncpy(c->publish_position1,_publish_position1_,49);
-  strncpy(c->subscribe_command1,_subscribe_command1_,49);
-  strncpy(c->subscribe_position1,_subscribe_position1_,49);
-  strncpy(c->subscribe_calibrate,_subscribe_calibrate_,49);
-  strncpy(c->subscribe_reset,_subscribe_reset_,49);
-  strncpy(c->subscribe_reboot,_subscribe_reboot_,49);*/
+  for(int i= 0; i<8; i++){
+    c->scenes[i][0]=0; c->scenes[i][1]=0;
+  }
   c->Shutter1_duration_down=_Shutter1_duration_down_;
   c->Shutter1_duration_up=_Shutter1_duration_up_;
 
   #if defined(_tilt_)
     c->Shutter1_duration_tilt=_Shutter1_duration_tilt_;
-    /*strncpy(c->publish_tilt1,_publish_tilt1_,49);
-    strncpy(c->subscribe_tilt1,_subscribe_tilt1_,49);*/
   #else
     c->Shutter1_duration_tilt=1;
     strncpy(c->publish_tilt1,"",49);
@@ -142,13 +137,14 @@ void copyConfig(configuration* from,configuration* to) {
   strncpy(to->wifi_ssid1,from->wifi_ssid1,24);
   strncpy(to->wifi_password1,from->wifi_password1,24);
   strncpy(to->mqtt_server,from->mqtt_server,24);
-  strncpy(to->mqtt_user,from->mqtt_user,24);
-  strncpy(to->mqtt_password,from->mqtt_password,24);
+  for(int i= 0; i<8; i++){
+    to->scenes[i][0]=from->scenes[i][0];
+    to->scenes[i][1]=from->scenes[i][1];
+  }
   /*strncpy(to->publish_position1,from->publish_position1,49);
   strncpy(to->subscribe_command1,from->subscribe_command1,49);
   strncpy(to->subscribe_position1,from->subscribe_position1,49);
   strncpy(to->subscribe_calibrate,from->subscribe_calibrate,49);
-  strncpy(to->subscribe_reset,from->subscribe_reset,49);
   strncpy(to->subscribe_reboot,from->subscribe_reboot,49);*/
   to->Shutter1_duration_down=from->Shutter1_duration_down;
   to->Shutter1_duration_up=from->Shutter1_duration_up;

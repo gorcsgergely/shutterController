@@ -17,17 +17,6 @@ const char _host_name_[] = "blind0";  // Has to be unique for each device
 const boolean button_press_delay = true;   
 #define _button_delay_ 100  
 
-//MQTT parameters (has to be unique for each device)
-/*const char _publish_position1_[] = "blinds/blind0/state";
-const char _publish_tilt1_[] = "blinds/blind0/tilt-state";
-const char _subscribe_command1_[] = "blinds/blind0/set";
-const char _subscribe_position1_[] = "blinds/blind0/position";
-const char _subscribe_tilt1_[] = "blinds/blind0/tilt";
-
-const char _subscribe_calibrate_[] = "blinds/blind0/calibrate";
-const char _subscribe_reset_[] = "blinds/blind0/reset";
-const char _subscribe_reboot_[] = "blinds/blind0/reboot";*/
-
 // Time for each rolling shutter to go down and up - you need to measure this and configure - default values - can be changed via web (if enabled)
 #define _Shutter1_duration_down_ 51200
 #define _Shutter1_duration_up_ 51770
@@ -50,8 +39,6 @@ const char WEB_UPGRADE_USER[] = "admin";
 const char WEB_UPGRADE_PASS[] = "admin";
 //char OTA_password[] = "admin"; // Only accepts [a-z][A-Z][0-9]
 const char _mqtt_server_[] = "192.168.0.89";
-const char _mqtt_user_[] = "user";
-const char _mqtt_password_[] = "pass";
 
 #define WIFI_RETRY_INTERVAL 20000
 #define MQTT_RETRY_INTERVAL 10000
@@ -122,14 +109,14 @@ GPIO26	power sensor UART Rx
 #endif
 
 struct topics {
-  char publish_position[50];
-  char publish_tilt[50];
-  char subscribe_command[50];
-  char subscribe_position[50];
-  char subscribe_tilt[50]; 
-  char subscribe_calibrate[50];
-  char subscribe_reboot[50];
-  char subscribe_reset[50]; // currently not used
+  char publish_position[40];
+  char publish_tilt[40];
+  char subscribe_command[40];
+  char subscribe_position[40];
+  char subscribe_tilt[40]; 
+  char subscribe_calibrate[40];
+  char subscribe_reboot[40];
+  char subscribe_scenes[25];
 };
 
 extern topics mqtt_topics;
@@ -142,16 +129,7 @@ struct configuration {
   char wifi_ssid1[25];
   char wifi_password1[25];
   char mqtt_server[25];
-  char mqtt_user[25];
-  char mqtt_password[25];
- /* char publish_position1[50];
-  char publish_tilt1[50];
-  char subscribe_command1[50];
-  char subscribe_position1[50];
-  char subscribe_tilt1[50]; 
-  char subscribe_calibrate[50];
-  char subscribe_reboot[50];
-  char subscribe_reset[50]; */// currently not used
+  int scenes[8][2];
   unsigned long Shutter1_duration_down;
   unsigned long Shutter1_duration_up;
   unsigned long Shutter1_duration_tilt;

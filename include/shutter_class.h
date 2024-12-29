@@ -54,6 +54,7 @@ class Shutter {
     void Start_down();
     void Calibrate();
     void Go_to_position(int p);
+    void Go_to_position_and_tilt(int p, int t);
     void Stop();
     const char *Movement();
     void Process_key(boolean key_up,boolean key_down);

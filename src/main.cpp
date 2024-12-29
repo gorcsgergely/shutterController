@@ -55,7 +55,7 @@ cover:
 
 unsigned long lastUpdate = 0; // timestamp - last MQTT update
 unsigned long lastCallback = 0; // timestamp - last MQTT callback received
-unsigned long lastWiFiDisconnect=0;
+//unsigned long lastWiFiDisconnect=0;
 unsigned long lastWiFiConnect=0;
 unsigned long WiFiLEDOn=0;
 unsigned long k1_up_pushed=0;
@@ -84,7 +84,7 @@ PubSubClient mqttClient(espClient);   // MQTT client
 //PubSubClient mqttClient(_mqtt_server_,1883,callback,espClient);   // MQTT client
 
 httpServer httpserver;
-WebPage webpage=WebPage(httpserver.getServer());
+WebPage webpage=WebPage(httpserver.getServer(), &mqttClient);
 HTTPUpdateServer httpUpdater;
 
 /************************ 
@@ -161,31 +161,25 @@ void mqtt_reconnect() {
   //uint8_t mac[6];
   //WiFi.macAddress(mac);
   String clientName(cfg.host_name);
-  /*clientName += "-";
-  clientName += macToStr(mac);
-  clientName += "-";
-  clientName += String(micros() & 0xff, 16);*/
-  
-  if (mqttClient.connect((char*)clientName.c_str(),cfg.mqtt_user,cfg.mqtt_password)) {
+  char temp[40];
+
+  if (mqttClient.connect((char*)clientName.c_str()/*,cfg.mqtt_user,cfg.mqtt_password*/)) {
     #ifdef DEBUG
       Serial.println("connected");
     #endif
 
+    // resubscribe
+    strcpy(temp,"blinds/");
+    strcat(temp,cfg.host_name);
+    strcat(temp,"/+");
+    mqttClient.subscribe(temp);
+    mqttClient.subscribe(mqtt_topics.subscribe_scenes);
+
     // Once connected, publish an announcement...
     //digitalWrite(SLED, LOW);   // Turn the Status Led on
-
     // lastUpdate=0;
     // checkSensors(); // send current sensors
     // publishSensor();
-
-    // resubscribe
-    mqttClient.subscribe(mqtt_topics.subscribe_command);  // listen to control for cover 1
-    mqttClient.subscribe(mqtt_topics.subscribe_position);  // listen to cover 1 postion set
-    mqttClient.subscribe(mqtt_topics.subscribe_reboot);  // listen for reboot command
-    mqttClient.subscribe(mqtt_topics.subscribe_calibrate);  // listen for calibration command
-    if (cfg.tilt) {
-      mqttClient.subscribe(mqtt_topics.subscribe_tilt);  // listen for cover 1 tilt position set
-    }
   } else {
    // digitalWrite(SLED, HIGH);   // Turn the Status Led off
     #ifdef DEBUG
@@ -307,13 +301,13 @@ String macToStr(const uint8_t* mac)
 }
 
 void Restart() {
-    mqttClient.publish(mqtt_topics.subscribe_command , "" , true);
+   /* mqttClient.publish(mqtt_topics.subscribe_command , "" , true);
     mqttClient.publish(mqtt_topics.subscribe_position , "" , true);
     mqttClient.publish(mqtt_topics.publish_position , "" , true);
     if (cfg.tilt) {
       mqttClient.publish(mqtt_topics.subscribe_tilt , "" , true);
       mqttClient.publish(mqtt_topics.publish_tilt , "" , true);
-    }       
+    }   */    
     ESP.restart();  
 }
 
@@ -370,6 +364,20 @@ void callback(char* topic, byte* payload, unsigned int length) {
     r1.Calibrate();
   } else if (strcmp(topic, mqtt_topics.subscribe_reboot) == 0) {    
      Restart();
+  } else if (strcmp(topic, mqtt_topics.subscribe_scenes) == 0) {
+      //position
+      #ifdef _reverse_position_mapping_
+        int p = map(constrain(atoi(payload_copy),0,100),0,100,100,0);
+      #else
+        int s = constrain(atoi(payload_copy),0,100);
+        int p = cfg.scenes[s][0];
+        int tilt = cfg.scenes[s][1];
+      #endif
+      if (p!=r1.getPosition()) {
+        r1.Go_to_position_and_tilt(p, tilt);   
+      } else {
+        r1.force_update=true;
+      }  
   }
   free(payload_copy);
 }
@@ -415,6 +423,7 @@ void publishSensor() {
     r1.force_update=false;
 
     lastUpdate=now;
+    webpage.lastUpdate= now;
   }
 }
 
@@ -478,14 +487,14 @@ int WifiGetRssiAsQuality(int rssi)
   return quality;
 }
 
-void timeDiff(char *buf,size_t len,unsigned long lastUpdate){
+/*void timeDiff(char *buf,size_t len,unsigned long eventtime){
     //####d, ##:##:##0
     unsigned long t = millis();
-    if(lastUpdate>t) {
+    if(eventtime>t) {
       snprintf(buf,len,"N/A");
       return;
     }
-    t=(t-lastUpdate)/1000;  // Converted to difference in seconds
+    t=(t-eventtime)/1000;  // Converted to difference in seconds
 
     int d=t/(60*60*24);
     t=t%(60*60*24);
@@ -500,7 +509,7 @@ void timeDiff(char *buf,size_t len,unsigned long lastUpdate){
     } else {
       snprintf(buf,len,"%02d:%02d",m,t); 
     }
-}
+}*/
 
 
 /***************************************
@@ -543,6 +552,7 @@ void loop() {
     if(wifiConnected) //just disconnected
     {
       wifiConnected=false;
+      webpage.lastWiFiDisconnect = now;
       //MDNS.end();
     }
     if ((WiFi.status() != WL_CONNECTED) && ((unsigned long)(now - previousWifiAttempt) > WIFI_RETRY_INTERVAL)) {//every 30 sec

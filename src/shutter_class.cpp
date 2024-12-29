@@ -219,6 +219,51 @@ void Shutter::Go_to_position(int p) {
   this->semafor=false;
 }
 
+/**************************************************
+ *  G O   T O   P O S I T I O N   A N D   T I L T
+***************************************************/
+void Shutter::Go_to_position_and_tilt(int p, int t) {
+  int po, tlt;
+  float incr;
+  unsigned long now = 0;
+
+  if (this->semafor){
+    delay(500);
+    if (this->semafor) return;
+  }
+  po=constrain(p,0,100);
+  tlt=constrain(t,0, 90);
+
+  if (po==this->Position) return;
+  if (this->movement != stopped) this->Stop();
+
+  this->semafor=true;
+  this->start_position=this->Position;
+  now = millis();
+  this->timestamp_start=now;
+  if (cfg.tilt) {
+    this->tilt_start=tlt; //hack the tilt_start to execute tilt right away after position reached, used in scenes
+    this->tilting=false;
+  }
+
+  if (po<this->Position) { // will go up
+    incr=(float)this->duration_up*(((float)this->Position-(float)po)/100.0);  
+    this->movement=up;
+    this->auto_stop=now+(unsigned long)incr;
+    digitalWrite(this->pin_down, LOW);  // Make sure relay down is off
+    digitalWrite(this->pin_up, HIGH);  // Turn on up relay
+  } else {
+    incr=(float)this->duration_down*(((float)po-(float)this->Position)/100.0);
+    if (po==100) incr+=lower_stop_offset;    
+    this->movement=down;    
+    this->auto_stop=now+(unsigned long)incr;
+    digitalWrite(this->pin_up, LOW);  // Make sure relay up is off
+    digitalWrite(this->pin_down, HIGH);  // Turn on down relay
+  }
+  this->semafor=false;
+}
+
+
 
 /***********************************
  *  U P D A T E   P O S I T I O N
@@ -315,7 +360,7 @@ void Shutter::tilt_it(int tlt) {
 /*********************************
  *  S T O P
 **********************************/
-// Stop and set tilt to start tilt (if position is not 0 or 100, with sume tollerance)
+// Stop and set tilt to start tilt (if position is not 0 or 100, with some tollerance)
 void Shutter::Stop() {
   unsigned long now = 0;
   if (this->semafor){
@@ -326,11 +371,13 @@ void Shutter::Stop() {
   now = millis();
   digitalWrite(this->pin_up, LOW);  // Turn off
   digitalWrite(this->pin_down, LOW);  // Turn off
+  delay(100);
   this->force_update=true; // Make sure the MQTT last position is sent before it goes to long updating period
   this->movement=stopped;
   this->semafor=false;
+  //set the start tilt back after stopping the movement
   if (cfg.tilt && this->Position != 0 && this->Position!=100 && !this->tilting && this->Tilt != this->tilt_start && ((unsigned long)(now-btnUp.pressed_timestamp)>this->duration_tilt) && ((unsigned long)(now-btnDown.pressed_timestamp)>this->duration_tilt) ) {
-    this->tilt_it(tilt_start);
+    this->tilt_it(this->tilt_start);
   }
 }
 
