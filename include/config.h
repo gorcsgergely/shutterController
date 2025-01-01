@@ -31,10 +31,10 @@ const char payload_stop[] = "stop";
 
 
 // Change these for your WIFI, IP and MQTT
-//char _ssid1_[] = "GG-2.4G";
-//char _password1_[] = "FhmX8rjjezmd";
-const char _ssid1_[] = "home";
-const char _password1_[] = "12345678";
+const char _ssid1_[] = "GG-2.4G";
+const char _password1_[] = "FhmX8rjjezmd";
+//const char _ssid1_[] = "home";
+//const char _password1_[] = "12345678";
 const char WEB_UPGRADE_USER[] = "admin";
 const char WEB_UPGRADE_PASS[] = "admin";
 //char OTA_password[] = "admin"; // Only accepts [a-z][A-Z][0-9]

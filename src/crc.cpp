@@ -60,10 +60,10 @@ boolean loadConfig() {
   strcat(temp_prefix,cfg.host_name);
 
   strcpy(mqtt_topics.publish_position,temp_prefix);
-  strcat(mqtt_topics.publish_position,"/state");
+  strcat(mqtt_topics.publish_position,"/state/position");
 
   strcpy(mqtt_topics.publish_tilt,temp_prefix);
-  strcat(mqtt_topics.publish_tilt,"/tilt-state");
+  strcat(mqtt_topics.publish_tilt,"/state/tilt");
 
   strcpy(mqtt_topics.subscribe_position,temp_prefix);
   strcat(mqtt_topics.subscribe_position,"/position");

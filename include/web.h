@@ -593,12 +593,12 @@ function sendConfig()
   var request = new XMLHttpRequest();
   request.onreadystatechange = function() { 
     if (this.readyState == 4 && this.status == 200) {
+      location.href='/';
     }
   };
   request.open("POST", "updateConfig");
   request.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
   request.send(JSON.stringify(data));
-  location.href='/';
 }
 
 function readConfig() {
